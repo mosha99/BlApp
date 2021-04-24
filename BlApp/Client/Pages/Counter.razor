@@ -1,0 +1,22 @@
+﻿@page "/counter"
+
+<h1>Counter</h1>
+
+@if (username != null)
+{
+    <Index username1="@username"></Index>
+}
+else
+{
+    <input @bind="username2"  /><button @onclick="set">ثبت</button>
+}
+
+@code {
+
+    public string username;
+    public string username2;
+    public void set()
+    {
+        username = username2;
+    }
+}

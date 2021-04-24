@@ -1,0 +1,135 @@
+﻿
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Net.Http
+@using BlApp.Shared;
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+@inject HttpClient Http
+
+@if (su != null)
+{
+    <p>welcome @username1</p>
+}
+<div class="form-group">
+    <label>
+        to:
+        @if (users != null)
+        {
+
+            <select @bind="name">
+
+                <option selected>یک کاربر انتخاب نمایید</option>
+
+                @foreach (var user in users)
+                {
+                    <option value="@user.name">@user.name</option>
+                }
+            </select>
+
+        }
+        <button type="button" @onclick="getuser">refresh</button>
+    </label>
+</div>
+<div class="form-group">
+    <label>
+        Message:
+        <input @bind="messageInput" />
+    </label>
+</div>
+<button @onclick="Send" disabled="@(!IsConnected || name == null)">Send</button>
+@if (!IsConnected)
+{<span> اتصال برقرار نیست </span>}
+@if (name == null)
+{<span>یک گیرنده مشخص کنید</span>}
+<hr>
+
+<ul id="messagesList">
+    @foreach (var message in messages)
+    {
+        <li>@message</li>
+    }
+</ul>
+
+@code {
+    private HubConnection hubConnection;
+    private List<string> messages = new List<string>();
+    private string userInput;
+    private string id;
+    private string name;
+    private string su;
+    private string messageInput;
+    private bool success = false;
+    [Parameter]
+    public string username1 { get; set; }
+    
+    
+
+    protected override async Task OnParametersSetAsync()
+    {
+        hubConnection = new HubConnectionBuilder().WithUrl(NavigationManager.ToAbsoluteUri("/chathub")).Build();
+
+        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            if (user == username1) user = "me";
+            var encodedMsg = $"{user}: {message}";
+            messages.Add(encodedMsg);
+            StateHasChanged();
+        });
+
+        hubConnection.On<string>("success", (message) =>
+        {
+            su = message;
+            Console.WriteLine(message);
+            StateHasChanged();
+        });
+
+        hubConnection.On<bool>("io", (online) =>
+        {
+            io();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+
+        await hubConnection.SendAsync("start", username1, hubConnection.ConnectionId);
+        Console.WriteLine(hubConnection.ConnectionId);
+        Console.WriteLine("ready");
+    }
+
+
+    private List<user> users;
+
+    protected async Task getuser()
+    {
+        //await hubConnection.SendAsync("conline");
+        users = await Http.GetFromJsonAsync<List<user>>("api/hub");
+
+    }
+
+
+
+
+
+
+    //protected override async Task OnInitializedAsync()
+    //{
+
+    //}
+    public void set()
+    {
+        userInput = hubConnection.ConnectionId;
+    }
+    async Task Send() =>
+        await hubConnection.SendAsync("SendMessage", hubConnection.ConnectionId, messageInput, name);
+    async Task io() =>
+        await hubConnection.SendAsync("start", username1, hubConnection.ConnectionId);
+
+
+    public bool IsConnected =>
+    hubConnection.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        await hubConnection.DisposeAsync();
+    }
+}
