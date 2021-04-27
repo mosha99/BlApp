@@ -7,47 +7,85 @@ using BlApp.Shared;
 using Microsoft.AspNetCore.SignalR;
 //using Microsoft.AspNet.SignalR;
 //using Microsoft.AspNet.SignalR.Hubs;
+using Newtonsoft.Json;
 namespace BlApp.Server.Hubs
 {
     public class ChatHub : Hub
     {
-        public async Task SendMessage(string user, string message, string to)
+        public services.Iservices Userservis;
+        public ChatHub(services.Iservices userservis)
         {
-            var _user = users.Data.FirstOrDefault(x=>x.id==user);
-            var _to = users.Data.FirstOrDefault(x => x.name==to);
+            Userservis = userservis;
 
-            if (_to != null && _user != null)
+        }
+
+        public async Task SendMessage(string message, int to)
+        
+        {
+
+            if (to != null && message != null)
             {
-                await Clients.Client(_to.id).SendAsync("ReceiveMessage", _user.name, message);
-                if(_to.id!=_user.id)await Clients.Client(_user.id).SendAsync("ReceiveMessage", _user.name, message);
+                try
+                {
+                    var sendto = Userservis.addmessage(to, Context.ConnectionId, message);
+                    var item = sendto.Message;
+
+                    //string Ns = Userservis.getname(Context.ConnectionId);
+
+                    var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = item.sender.firstname + " " + item.sender.lastname, tname = "me", id = item.sender.id });
+                    await Clients.Client(sendto.Cid).SendAsync("ReceiveMessage", x);
+                    x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = "me", tname = item.target.firstname + " " + item.target.firstname, id = item.sender.id });
+                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", x);
+                }
+                catch
+                {
+                    await Clients.Client(Context.ConnectionId).SendAsync("success", "is fild");
+                }
+                
             }
             else
             {
-                await Clients.Client(_user.id).SendAsync("ReceiveMessage", _user.name, "کاربر یافت نشد");
+                await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", to.ToString(), "کاربر یافت نشد");
             }
-            //await Clients.All.SendAsync("ReceiveMessage", user, message);
+
         }
-        public async Task start(string _user, string _id)
+        public async Task start(string token)
         {
+            string id = Context.ConnectionId;
             try
             {
 
-                if (users.Data == null) users.Data = new List<user>();
-
-                if (users.Data.FirstOrDefault(x => x.name == _user) == null)
+                int Id = Userservis.change(token, Context.ConnectionId);
+                if (Id!=-1)
                 {
-                    users.Data.Add(new user { id = _id, name = _user });
+                    await Clients.Client(id).SendAsync("success", "is success");
+
+                    var list = Userservis.inputM(Id,true);
+                    var list2 = Userservis.senderM(Id);
+
+                    foreach (var item in list)
+                    {
+                        var x =JsonConvert.SerializeObject(new messageL { date=item.sendDate , message=item.messag , name=item.sender.firstname+" "+item.sender.lastname ,tname="me", id=item.sender.id});
+                        await Clients.Client(id).SendAsync("ReceiveMessage", x);
+                    }
+                    foreach (var item in list2)
+                    {
+                        var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = "me",tname=item.target.firstname+" "+item.target.lastname, id = item.target.id });
+                        await Clients.Client(id).SendAsync("ReceiveMessage", x);
+                    }
+
+                    await Clients.Client(id).SendAsync("success", "all send");
                 }
-                else {users.Data.FirstOrDefault(x => x.name == _user).id = _id; }
-                    
-                await Clients.Client(_id).SendAsync("success", "is success");
+
+                else await Clients.Client(id).SendAsync("success", "is fild");
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                await Clients.Client(_id).SendAsync("success", "is fild");
+                await Clients.Client(id).SendAsync("success", "is fild");
             }
         }
-
+        /*
         public async Task conline()
         {
             List<user> nu = users.Data;
@@ -64,18 +102,20 @@ namespace BlApp.Server.Hubs
             var x = Clients;
             var x1 = Context;
             return base.OnConnectedAsync();
-        }
+        }*/
         public override Task OnDisconnectedAsync(Exception exception)
         {
             var x = Clients;
             var x1 = Context;
+            var f = Userservis.ofline(x1.ConnectionId);
             return base.OnDisconnectedAsync(exception);
         }
+
         //public override Task OnDisconnectedAsync(Exception exception)
         //{
 
         //    return base.OnDisconnectedAsync(exception);
-        //}
+        //}*/
 
     }
 }

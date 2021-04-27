@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DAl;
+using Microsoft.Extensions.DependencyInjection;
+using Database;
+using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,16 +18,26 @@ namespace BlApp.Server.Controllers
     [ApiController]
     public class hubController : ControllerBase
     {
-        public ChatHub Property { get; set; }
-        public  hubController()
+
+        public services.Iservices Userservis;
+        public hubController(services.Iservices userservis)
         {
-            Property = new ChatHub();
+            Userservis = userservis;
+
         }
-        [HttpGet]
-        public IEnumerable<user> Get()
+        //[HttpGet]
+        //public List<messags> Get()
+        //{
+        //    var x =Userservis.inputM(2);
+        //    var json = JsonConvert.SerializeObject(x);
+        //    return x;
+        //}
+        [HttpPost]
+        public userout login(DAl.userin user)
         {
-            
-            return users.Data;
+            userout rs =new userout();
+            rs.token=Userservis.login(user);
+            return rs;
         }
 
     }

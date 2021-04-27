@@ -1,0 +1,47 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using System.Net.Http
+@using BlApp.Shared;
+@using System.Collections.Generic;
+@inject NavigationManager NavigationManager
+@*@implements IAsyncDisposable*@
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="scrollbar style-1">
+
+
+    @foreach (var item in messags)
+    {
+        if (item.tname == "me")
+        {
+            <div class="message">
+                <div class="msb"><span class="ms" style="word-break: break-word;">@item.message</span><span class="date">@item.date.Hour:@item.date.Minute</span></div>
+            </div>
+        }
+        else
+        {
+            <div class="messageT">
+                <div class="msbT"><span class="mst" style="word-break: break-word;">@item.message</span><span class="date">@item.date.Hour:@item.date.Minute</span></div>
+            </div>
+        }
+    }
+
+
+</div>
+
+
+@code {
+    [Parameter]
+    public List<messageL> messags { set; get; }
+
+    protected override Task OnInitializedAsync()
+    {
+        messags = new List<messageL>();
+        return base.OnInitializedAsync();
+    }
+    public async void RS()
+    {
+        await JS.InvokeAsync<string>("Rsize");
+    }
+
+}

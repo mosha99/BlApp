@@ -1,10 +1,11 @@
 ﻿
-@using Microsoft.AspNetCore.SignalR.Client
+@*@using Microsoft.AspNetCore.SignalR.Client
 @using System.Net.Http
 @using BlApp.Shared;
 @inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 @inject HttpClient Http
+@inject IJSRuntime JS;
 
 @if (su != null)
 {
@@ -28,6 +29,8 @@
 
         }
         <button type="button" @onclick="getuser">refresh</button>
+        <button type="button" @onclick="setcookie">scookie</button>
+        <button type="button" @onclick="getcookie">gcookie</button>
     </label>
 </div>
 <div class="form-group">
@@ -50,6 +53,7 @@
     }
 </ul>
 
+
 @code {
     private HubConnection hubConnection;
     private List<string> messages = new List<string>();
@@ -61,8 +65,8 @@
     private bool success = false;
     [Parameter]
     public string username1 { get; set; }
-    
-    
+
+
 
     protected override async Task OnParametersSetAsync()
     {
@@ -109,8 +113,6 @@
 
 
 
-
-
     //protected override async Task OnInitializedAsync()
     //{
 
@@ -132,4 +134,29 @@
     {
         await hubConnection.DisposeAsync();
     }
-}
+    public void sdf()
+    {
+        var connection = new HubConnectionBuilder()
+        .WithUrl("/chathub", options =>
+        {
+            options.AccessTokenProvider = () => Task.FromResult("_myAccessToken");
+        })
+        .Build();
+    }
+
+
+
+    private async Task setcookie()
+    {
+        var text =
+            await JS.InvokeAsync<string>(identifier: "setCookie", "token","sssfsdgsdfgfdgdsfgfchgf",1);
+
+    }
+    private async Task getcookie()
+    {
+        var text =
+            await JS.InvokeAsync<string>(identifier: "getCookie", "token");
+        Console.WriteLine(text);
+    }
+
+}*@

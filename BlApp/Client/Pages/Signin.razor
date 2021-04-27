@@ -1,0 +1,83 @@
+﻿@page "/signin"
+
+@using BlApp.Shared;
+<div class="container">
+    <div class="card shadow-lg o-hidden border-0 my-5">
+        <div class="card-body p-0">
+            <div class="row">
+                <div class="col-lg-5 d-none d-lg-flex">
+                    <div class="flex-grow-1 bg-register-image" style="background-image: url(&quot;assets/img/dogs/image3.png&quot;);"></div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="p-5">
+                        <div class="text-center">
+                            <h4 class="text-dark mb-4">Create an Account!</h4>
+                        </div>
+                        <form class="user">
+                            <div class="form-group row">
+                                <div class="col-sm-6 mb-3 mb-sm-0"><input class="form-control form-control-user" type="text" id="exampleFirstName" placeholder="First Name" name="first_name" @bind="model.firsname" @bind:event="oninput"></div>
+
+                                <div class="col-sm-6"><input class="form-control form-control-user" type="text" id="exampleFirstName" placeholder="Last Name" name="last_name" @bind="model.lastname" @bind:event="oninput"></div>
+                            </div>
+                            @if (validate && model.Efirsname != null)
+                            {<span>@model.Efirsname</span>}
+                            @if (validate && model.Elastname != null)
+                            {<span>@model.Elastname</span>}
+                            <div class="form-group"><input class="form-control form-control-user" type="email" id="exampleInputEmail" aria-describedby="emailHelp" placeholder="Email Address" name="email" @bind="model.email" @bind:event="oninput"></div>
+                            @if (validate && model.Eemail != null)
+                            {<span>@model.Eemail</span>}
+                            <div class="form-group row">
+                                <div class="col-sm-6 mb-3 mb-sm-0"><input class="form-control form-control-user" type="password" id="examplePasswordInput" placeholder="Password" name="password" @bind="model.password" @bind:event="oninput"></div>
+                                <div class="col-sm-6"><input class="form-control form-control-user" type="password" id="exampleRepeatPasswordInput" placeholder="Repeat Password" name="password_repeat" @bind="model.Cpassword" @bind:event="oninput"></div>
+                            </div>
+                            @if (validate && model.Epassword != null)
+                            {<span>@model.Epassword</span>}
+                            @if(model.Epassword != null&&model.ECpassword != null) { <br />}
+                            @if (validate && model.ECpassword != null)
+                            {<span>@model.ECpassword</span>}
+                            <button class="btn btn-primary btn-block text-white btn-user" type="button" @onclick="validator">Register Account</button>
+                            <hr>
+                            <hr>
+                        </form>
+                        <div class="text-center"><a class="small" href="forgot-password.html">Forgot Password?</a></div>
+                        <div class="text-center"><a class="small" href="login.html">Already have an account? Login!</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Esignin model;
+    private bool validate;
+    private bool modelisvalid;
+    protected override Task OnInitializedAsync()
+    {
+        model = new Esignin();
+        return base.OnInitializedAsync();
+    }
+
+    public void validator()
+    {
+        validate = true;
+        
+        if (model.firsname == null || model.firsname.Length < 3 || model.firsname.Length > 50) model.Efirsname = "name invalid";
+        else model.Efirsname = null;
+
+        if (model.lastname == null || model.lastname.Length < 3 || model.lastname.Length > 50) model.Elastname = "name invalid";
+        else model.Elastname = null;
+
+        if (model.email == null || model.email.Length < 10 || model.email.Length > 60) model.Eemail = "Email invalid";
+        else model.Eemail = null;
+
+        if (model.password == null || model.password.Length < 8 || model.password.Length > 50) model.Epassword = "Password invalid";
+        else model.Epassword = null;
+
+        if (model.Cpassword != model.password) model.ECpassword = "Repeat Password invalid";
+        else model.ECpassword = null;
+
+        modelisvalid = (model.ECpassword == null && model.Epassword == null && model.Eemail == null && model.Elastname == null && model.Efirsname == null);
+
+    }
+}

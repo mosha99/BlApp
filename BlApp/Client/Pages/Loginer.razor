@@ -1,0 +1,109 @@
+﻿
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Net.Http
+@using BlApp.Shared;
+@inject NavigationManager NavigationManager
+@*@implements IAsyncDisposable*@
+@inject HttpClient Http
+@inject IJSRuntime JS;
+@if (inpro)
+{
+    <div id="loding">
+        <div id="in-load"><span id="tload">درحال ورود</span><span class="spinner-grow text-left" role="status"></span><span class="spinner-grow text-left" role="status" id="cspiner"></span><span class="spinner-grow text-left" role="status"></span></div>
+    </div>
+}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-12 col-xl-10">
+        <div class="card shadow-lg o-hidden border-0 my-5">
+            <div class="card-body p-0">
+                <div class="row">
+                    <div class="col-lg-6 d-none d-lg-flex">
+                        <div class="flex-grow-1 bg-login-image" style="background-image: url(&quot;assets/img/dogs/image3.png&quot;);"></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h4 class="text-dark mb-4">Welcome Back!</h4>
+                            </div>
+                            <form class="user">
+                                <div class="form-group"><input class="form-control form-control-user" type="email" id="exampleInputEmail" aria-describedby="emailHelp" placeholder="Enter Email Address..." name="email" @bind="username"></div>
+                                <div class="form-group"><input class="form-control form-control-user" type="password" id="exampleInputPassword" placeholder="Password" name="password" @bind="password"></div>
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox small">
+                                        <div class="form-check"><input class="form-check-input custom-control-input" type="checkbox" id="formCheck-1"><label class="form-check-label custom-control-label" for="formCheck-1">Remember Me</label></div>
+                                    </div>
+                                </div><button class="btn btn-primary btn-block text-white btn-user" type="button" @onclick="Log">Login</button>
+                                <hr>
+                                @if (error != null)
+                                {<span style="color:'red'" ;>@error</span>}
+                                <hr>
+                            </form>
+                            <div class="text-center"><a class="small" href="forgot-password.html">Forgot Password?</a></div>
+                            <div class="text-center"><a class="small" href="register.html">Create an Account!</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@code { 
+    private string username;
+    private string password;
+    private bool remember;
+    private bool login;
+    private bool inpro;
+
+    [Parameter]
+    public EventCallback<bool> isLogin { get; set; }
+    [Parameter]
+    public EventCallback<string> Itoken { get; set; }
+
+    private string token;
+    private string error;
+    protected override async Task OnInitializedAsync()
+    {
+        token = await JS.InvokeAsync<string>("getCookie", "token");
+        if (token != null)
+        {
+            login = true;
+            isLogin.InvokeAsync(login);
+            Itoken.InvokeAsync(token);
+        }
+
+    }
+
+    public async Task Log()
+    {
+        inpro = true;
+        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+        {
+            userin user = new userin { email = username, password = password };
+            var tok = await Http.PostAsJsonAsync<userin>("/api/hub", user);
+            Console.WriteLine(tok);
+
+            userout token = await tok.Content.ReadFromJsonAsync<userout>();
+            Console.WriteLine(token.token);
+
+
+            if (token.token != null)
+            {
+                Console.WriteLine(token.token);
+                await JS.InvokeAsync<string>("setCookie", "token", token.token);
+                login = true;
+                isLogin.InvokeAsync(login);
+                Itoken.InvokeAsync(token.token);
+                inpro = false;
+            }
+            else
+            {
+                error = "ورود ناموفق";
+            }
+
+        }
+        else
+        {
+            error = "ورود ناموفق";
+        }
+
+    } }
