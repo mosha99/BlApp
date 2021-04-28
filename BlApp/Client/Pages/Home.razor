@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Net.Http
 @using BlApp.Shared;
+@using BlApp.Client.Pages;
 @using System.Collections.Generic;
 @using Newtonsoft.Json;
 @inject NavigationManager NavigationManager
@@ -11,25 +12,48 @@
 @inject IJSRuntime JS;
 
 @if (!login)
-{<Loginer isLogin="(b)=>log((bool)b)" Itoken="(a)=>Tk((string)a)"></Loginer> }
+{<Loginer isLogin="(b) => log((bool)b)" Itoken="(a) => Tk((string)a)"></Loginer> }
 else
 {
+    if (New)
+    {
+        <div id="addchat">
+            <div class="bg-white col-6 p-3" style="border-radius: 12px;">
+                <select class="custom-select mr-3" @bind="newCH">
+                    <option value="" selected="">انتخاب كاربر</option>
+                    @foreach (var item in users)
+                    {
+                        <option value="@item.id">@item.name</option>
+                    }
+                </select>
+                <button class="btn btn-primary btn-block mt-4" type="button" @onclick="newchat2">add</button>
+                <button class="btn btn-danger btn-block mt-4" type="button" @onclick="close">cancel</button>
+            </div>
+        </div>
+    }
     <div id="wrapper">
-        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
+        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0" id="navu">
             <div class="container-fluid d-flex flex-column p-0">
                 <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
                     <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
-                    <div class="sidebar-brand-text mx-3"><span>Brand</span></div>
+                    <div class="sidebar-brand-text mx-3"><span>messager</span></div>
                 </a>
                 <hr class="sidebar-divider my-0">
                 <ul class="navbar-nav text-light" id="accordionSidebar">
                     <li class="nav-item"><a class="nav-link" href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a></li>
                 </ul>
                 <ul class="navbar-nav text-light" id="accordionSidebar">
-                    <li class="nav-item"><a class="nav-link"><i class="fas fa-user"></i><span>chats</span></a></li>
+                    <li class="nav-item"><a class="nav-link" @onclick="newchat"><i class="fas fa-plus"></i><span>add chats</span></a></li>
                     @foreach (var item in names)
                     {
-                        <li class="nav-item"><a @onclick="()=>select(item)"><a class="nav-link" style="cursor:pointer" @onclick="()=>select(item)"><i class="fas fa-user"></i><span>@item</span></a></a></li>
+                        <li class="nav-item">
+                            <a @onclick="() => select(item.name)">
+                                <a class="nav-link" style="cursor:pointer" @onclick="() => select(item.name)">
+                                    @if (item.unSeenCount != 0)
+                                    {<span class="badge badge-danger badge-counter">@item.unSeenCount</span>}<i class="fas fa-user"></i><span>@item.name</span>
+                                </a>
+                            </a>
+                        </li>
                     }
                 </ul>
             </div>
@@ -38,15 +62,15 @@ else
             <div id="content">
                 <nav class="navbar navbar-light navbar-expand bg-white shadow topbar static-top">
                     <div class="container-fluid">
-                        <button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
+                        <button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button" @onclick="Hide"><i class="fas fa-bars"></i></button>
                         <form class="form-inline d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
                             <div class="input-group">
-                                <div class="input-group-append"></div>
+                                <span>@selectedChat</span>
                             </div>
                         </form>
                         <ul class="navbar-nav flex-nowrap ml-auto">
                             <li class="nav-item dropdown d-sm-none no-arrow">
-                                <a class="dropdown-toggle nav-link" aria-expanded="false" data-toggle="dropdown" href="#"><i class="fas fa-search"></i></a>
+                                @*<a class="dropdown-toggle nav-link" aria-expanded="false" data-toggle="dropdown" href="#"><i class="fas fa-search"></i></a>
                                 <div class="dropdown-menu dropdown-menu-right p-3 animated--grow-in" aria-labelledby="searchDropdown">
                                     <form class="form-inline mr-auto navbar-search w-100">
                                         <div class="input-group">
@@ -141,7 +165,7 @@ else
                                         <a class="dropdown-item" href="#"><i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>&nbsp;Profile</a><a class="dropdown-item" href="#"><i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>&nbsp;Settings</a><a class="dropdown-item" href="#"><i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>&nbsp;Activity log</a>
                                         <div class="dropdown-divider"></div><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>&nbsp;Logout</a>
                                     </div>
-                                </div>
+                                </div>*@
                             </li>
                         </ul>
                     </div>
@@ -166,25 +190,32 @@ else
 }
 
 @code {
+
     private HubConnection hubConnection;
     private bool login;
     private string token;
     private string _id;
     private string su;
     private List<messageL> messags;
-    private List<string> names;
+    private List<chats> names;
     private List<string> outM;
     private List<string> inM;
     private string selectedChat;
     private int selectedChatID;
     private List<messageL> selectedmessags;
-
+    private bool New;
     private string textbox;
+    private List<user> users ;
+    private string newCH;
+    private List<string> newadd;
+    private bool hide;
     protected override async Task OnInitializedAsync()
     {
+        newadd= new List<string>();
+        users = new List<user>();
         messags = new List<messageL>();
         selectedmessags = new List<messageL>();
-        names = new List<string>();
+        names = new List<chats>();
         outM = new List<string>();
         inM = new List<string>();
         hubConnection = new HubConnectionBuilder().WithUrl(NavigationManager.ToAbsoluteUri("/chathub")).Build();
@@ -198,11 +229,34 @@ else
 
             messags.Add(_message);
 
-            string us = names.FirstOrDefault(x => x == _message.name);
+            chats us = names.FirstOrDefault(x => x.name == _message.name);
+            Console.WriteLine(_message.name);
 
             if (us == null && _message.tname == "me")
             {
-                names.Add(_message.name);
+                Console.WriteLine(_message.name);
+
+                names.Add(new chats { name = _message.name, unSeenCount = 0 ,id = _message.id});
+
+            }
+            else if (!_message.seen && _message.tname == "me")
+            {
+
+                names.FirstOrDefault(x => x.name == us.name).unSeenCount++;
+            }
+            else if( _message.tname != "me")
+            {
+
+                var x =messags.FirstOrDefault(x => x.name == _message.tname);
+                if (x == null)
+                {
+                    var z =names.FirstOrDefault(s => s.name == _message.tname);
+                    if(z==null) names.Add(new chats { name = _message.tname, unSeenCount = 0, id = _message.id });
+
+                }
+
+                Console.WriteLine("ho");
+
             }
 
             if (selectedChat != null)
@@ -210,7 +264,6 @@ else
                 select(selectedChat);
 
             }
-            Console.WriteLine(names);
             StateHasChanged();
 
         });
@@ -219,6 +272,20 @@ else
         {
             su = message;
             Console.WriteLine(message);
+            StateHasChanged();
+        });
+        hubConnection.On<string>("getuser", (message) =>
+        {
+            Console.WriteLine(message);
+
+            user _message = JsonConvert.DeserializeObject<user>(message);
+
+            chats us = names.FirstOrDefault(x => x.id == _message.id);
+            if (us == null)
+            {
+                users.Add(_message);
+            }
+
             StateHasChanged();
         });
 
@@ -252,17 +319,40 @@ else
 
     public async void select(string name)
     {
-        Console.WriteLine(name);
         selectedChat = name;
-        selectedmessags = messags.Where(x => x.name == name).ToList();
+        var z = newadd.Where(x => x == name);
+        Console.WriteLine(z != null);
+        if (z!=null)
+        {
+            Console.WriteLine("new");
+            selectedChatID = names.FirstOrDefault(z => z.name == name).id;
+            selectedmessags = new List<messageL>();
+            selectedmessags = messags.Where(x => x.name == name)?.ToList();
+            if(messags.Where(x => x.tname == name)!=null) selectedmessags.AddRange(messags.Where(x => x.tname == name));
+            selectedmessags = selectedmessags.OrderBy(x => x.date)?.ToList();
+            Console.WriteLine("Enew");
+        }
+        else
+        {
+            Console.WriteLine("old");
+            selectedmessags = messags.Where(x => x.name == name).ToList();
+            names.FirstOrDefault(x => x.name == name).unSeenCount = 0;
+            selectedChatID = selectedmessags.First().id;
+            selectedmessags.AddRange(messags.Where(x => x.tname == name));
+            selectedmessags = selectedmessags.OrderBy(x => x.date)?.ToList();
 
-        textbox = "سلام";
+            foreach (var item in selectedmessags)
+            {
+                if (item.seen == false)
+                {
+                    await hubConnection.SendAsync("seen", item.Mid);
 
-        selectedChatID = selectedmessags.First().id;
-        selectedmessags.AddRange(messags.Where(x => x.tname == name));
-        selectedmessags = selectedmessags.OrderBy(x => x.date)?.ToList();
+                }
+            }
+        }
 
-        textbox = null;
+
+        Console.WriteLine($"{selectedChatID} is now selected");
 
     }
 
@@ -271,6 +361,54 @@ else
         if (!string.IsNullOrWhiteSpace(textbox) && selectedChatID != null)
         {
             await hubConnection.SendAsync("SendMessage", textbox, selectedChatID);
+            textbox = null;
+        }
+    }
+
+    public async void newchat()
+    {
+        New = true;
+        await hubConnection.SendAsync("getall");
+
+    }
+
+    public async void newchat2()
+    {
+        if (newCH != null)
+        {
+            New = false;
+
+            var us = users.FirstOrDefault(x => x.id == int.Parse(newCH));
+            var us2 = names.FirstOrDefault(x => x.id == int.Parse(newCH));
+
+            if (us2 == null)
+            {
+                chats x8 = new chats ();
+                x8.id = us.id;
+                x8.name = us.name;
+                x8.unSeenCount = 0;
+                names.Add(x8);
+                newadd.Add(us.name);
+            }
+            users = new List<user>();
+        }
+    }
+
+    public async void close()
+    {
+        New = false;
+    }
+    public async void Hide()
+    {
+        if (hide)
+        {
+            await JS.InvokeAsync<string>("show");
+            hide = false;
+        }
+        else
+        {
+            await JS.InvokeAsync<string>("hide");
+            hide = true;
         }
     }
 

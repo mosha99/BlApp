@@ -1,4 +1,7 @@
 ﻿@page "/signin"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS;
 
 @using BlApp.Shared;
 <div class="container">
@@ -13,11 +16,12 @@
                         <div class="text-center">
                             <h4 class="text-dark mb-4">Create an Account!</h4>
                         </div>
+                        <input class="form-control form-control-user d-none" style="height:0;" type="text" id="exampleFirstName" placeholder="First Name" name="first_name" @bind="dd" @bind:event="oninput">
                         <form class="user">
                             <div class="form-group row">
                                 <div class="col-sm-6 mb-3 mb-sm-0"><input class="form-control form-control-user" type="text" id="exampleFirstName" placeholder="First Name" name="first_name" @bind="model.firsname" @bind:event="oninput"></div>
 
-                                <div class="col-sm-6"><input class="form-control form-control-user" type="text" id="exampleFirstName" placeholder="Last Name" name="last_name" @bind="model.lastname" @bind:event="oninput"></div>
+                                <div class="col-sm-6"><input class="form-control form-control-user " type="text" id="exampleFirstName" placeholder="Last Name" name="last_name" @bind="model.lastname" @bind:event="oninput"></div>
                             </div>
                             @if (validate && model.Efirsname != null)
                             {<span>@model.Efirsname</span>}
@@ -32,15 +36,15 @@
                             </div>
                             @if (validate && model.Epassword != null)
                             {<span>@model.Epassword</span>}
-                            @if(model.Epassword != null&&model.ECpassword != null) { <br />}
+                            @if (model.Epassword != null && model.ECpassword != null)
+                            {<br />}
                             @if (validate && model.ECpassword != null)
                             {<span>@model.ECpassword</span>}
-                            <button class="btn btn-primary btn-block text-white btn-user" type="button" @onclick="validator">Register Account</button>
+                            <button class="btn btn-primary btn-block text-white btn-user" type="button" @onclick="submit">Register Account</button>
                             <hr>
                             <hr>
                         </form>
-                        <div class="text-center"><a class="small" href="forgot-password.html">Forgot Password?</a></div>
-                        <div class="text-center"><a class="small" href="login.html">Already have an account? Login!</a></div>
+                        <div class="text-center"><a class="small" href="/">Already have an account? Login!</a></div>
                     </div>
                 </div>
             </div>
@@ -50,18 +54,20 @@
 
 @code {
     private Esignin model;
+
     private bool validate;
     private bool modelisvalid;
+    private string dd;
     protected override Task OnInitializedAsync()
     {
         model = new Esignin();
         return base.OnInitializedAsync();
     }
 
-    public void validator()
+    public bool validator()
     {
         validate = true;
-        
+
         if (model.firsname == null || model.firsname.Length < 3 || model.firsname.Length > 50) model.Efirsname = "name invalid";
         else model.Efirsname = null;
 
@@ -78,6 +84,42 @@
         else model.ECpassword = null;
 
         modelisvalid = (model.ECpassword == null && model.Epassword == null && model.Eemail == null && model.Elastname == null && model.Efirsname == null);
+        return modelisvalid;
+    }
+    public async void submit()
+    {
+        Console.WriteLine("click");
+        if (validator())
+        {
+            signin user = new signin
+            {
+                firsname = model.firsname,
+                lastname = model.lastname,
+                email = model.email,
+                password = model.password,
+            };
 
+            var mdf = await Http.PostAsJsonAsync<Isignin>("/api/sign", user);
+            Esignin mdd = await mdf.Content.ReadFromJsonAsync<Esignin>();
+
+            model = mdd;
+
+            if (model.Efirsname == null && model.Eemail == null)
+            {
+                Console.WriteLine("nav");
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                Console.WriteLine("errorr");
+                StateHasChanged();
+                validate = true;
+            }
+
+            model.password = null;
+            model.Cpassword = null;
+            dd = "ddddd";
+            Console.WriteLine("un nav");
+        }
     }
 }

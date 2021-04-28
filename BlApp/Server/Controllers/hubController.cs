@@ -35,10 +35,18 @@ namespace BlApp.Server.Controllers
         [HttpPost]
         public userout login(DAl.userin user)
         {
-            userout rs =new userout();
-            rs.token=Userservis.login(user);
+            userout rs = new userout();
+            rs.token = Userservis.login(user);
             return rs;
         }
+
+
+        //[HttpPost]
+        //public Esignin singin(signin model)
+        //{
+        //    Esignin user = Userservis.Signin(model);
+        //    return user;
+        //}
 
     }
 }

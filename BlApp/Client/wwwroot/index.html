@@ -92,7 +92,7 @@
     <script src="assets/js/untitled.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
-    
+
     <script>
         function setCookie(cName, cValue, expDays) {
             let date = new Date();
@@ -113,6 +113,21 @@
         function Alert(textM) {
             alert(textM);
         }
+        function Rsize(vx) {
+            var wd = $("body").outerHeight() - $("footer").outerHeight() - $(".static-top").outerHeight();
+            $("#general").height(wd);
+        }
+        function hide() {
+            $("#navu").addClass("d-none");
+        }
+        function show() {
+            $("#navu").removeClass("d-none");
+        }
+
+
+        function Rscroll(vd) {
+            document.getElementById("general").scrollBy(0, 90000000000000000000000);;
+              }
     </script>
 </body>
 

@@ -20,7 +20,8 @@ $("#content").scroll(function () {
     var wd = $("body").outerHeight() - $("footer").outerHeight() - $(".static-top").outerHeight();
     $("#general").height(wd);
 });
-function RSize(textM) {
+function Rsize() {
+    alert("helo2");
     var wd = $("body").outerHeight() - $("footer").outerHeight() - $(".static-top").outerHeight();
     $("#general").height(wd);
 }

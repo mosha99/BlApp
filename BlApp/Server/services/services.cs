@@ -66,6 +66,12 @@ namespace BlApp.Server.services
             if (id != null) { token = BlApp.Server.infrastructure.jwtUtility.generateToken(id, mainsetings); }
             return token;
         }
+        public  Esignin Signin(Isignin model)
+        {
+            Esignin user =DAl.manager.adduser(model);
+
+            return user;
+        }
         public int cheeckToken(string token)
         {
             int id = jwtUtility.auth(token, mainsetings);
@@ -128,7 +134,11 @@ namespace BlApp.Server.services
             return user.firstname + " " + user.lastname;
         }
 
-
+        public bool messagSeen(int id)
+        {
+            bool sc = DAl.manager.seen(id);
+            return sc;
+        }
 
         /* public Database.users GetById(int id)
          {

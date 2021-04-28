@@ -1,4 +1,5 @@
 ﻿using BlApp.Server.services;
+using BlApp.Shared;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,7 +24,7 @@ namespace DAl
         public string email { set; get; }
         public DateTime start { set; get; }
     }
-    
+
     public class manager
     {
         public static bool first = false;
@@ -76,7 +77,7 @@ namespace DAl
             var x = Database.messag.ToList();
             var x3 = Database.user.ToList();
             List<messags> list = x3.FirstOrDefault(x => x.id == Id).input?.ToList();
-            if (unseen) list = list.Where(x => x.seen == false)?.ToList();
+            //if (unseen) list = list.Where(x => x.seen == false)?.ToList();
             /*foreach (var item in list)
             {
                 item.seen = true;
@@ -97,7 +98,7 @@ namespace DAl
                 ms.sendDate = DateTime.Now;
                 Database.messag.Add(ms);
                 Database.SaveChanges();
-                sendM user = new sendM {  Message= ms , Cid= ms.target.connectionId};
+                sendM user = new sendM { Message = ms, Cid = ms.target.connectionId };
                 return user;
             }
             catch
@@ -105,18 +106,50 @@ namespace DAl
                 return null;
             }
         }
-        public static bool adduser(users user)
+        public static Esignin adduser(Isignin user)
         {
             inc();
             try
             {
-                Database.user.Add(user);
-                Database.SaveChanges();
-                return true;
+                var validP1 = Database.user.FirstOrDefault(x => x.firstname.ToLower() == user.firsname.ToLower());
+                var validP2 = Database.user.FirstOrDefault(x => x.lastname.ToLower() == user.lastname.ToLower());
+                var validP3 = Database.user.FirstOrDefault(x => x.email.ToLower() == user.email.ToLower());
+                Esignin Nuser = new Esignin {
+                    firsname = user.firsname,
+                    lastname = user.lastname,
+                    email = user.email,
+                    password = user.password,
+                    Cpassword = user.password,
+                };
+                if ((validP1 == null || validP2 == null) && validP3 == null)
+                {
+                    var x = new users
+                    {
+                        email = user.email,
+                        firstname = user.firsname,
+                        lastname = user.lastname,
+                        Lastonline = DateTime.Now,
+                        start = DateTime.Now,
+                        online = false,
+                        password = user.password,
+
+                    };
+                    Database.user.Add(x);
+                    Database.SaveChanges();
+                }
+                else
+                {
+                    
+                    if (validP1 != null && validP2 != null) Nuser.Efirsname = "نام تکراری";
+                    if (validP3 != null) Nuser.Eemail = "ایمیل تکراری";
+                }
+
+                
+                return Nuser;
             }
             catch
             {
-                return false;
+                return null;
             }
         }
         public static bool DeletMessage(int Messagid)
@@ -162,8 +195,8 @@ namespace DAl
             inc();
             bool unseen = false;
             var us = Database.user.FirstOrDefault(x => x.id == userid);
-            int count=us.input.Where(x => x.seen == false).Count();
-            if(count!=0) unseen = true;
+            int count = us.input.Where(x => x.seen == false).Count();
+            if (count != 0) unseen = true;
             return true;
         }
         public static List<users> getallUseronLine()
@@ -175,7 +208,7 @@ namespace DAl
         public static bool Ucheeck(int userid)
         {
             inc();
-            bool online=Database.user.FirstOrDefault(x => x.id == userid).online;
+            bool online = Database.user.FirstOrDefault(x => x.id == userid).online;
             return online;
         }
         public static us login(userin user)
@@ -183,7 +216,7 @@ namespace DAl
             inc();
             us use = null;
             var users = Database.user.FirstOrDefault(x => x.email == user.email);
-            if (users != null && user.password==users.password) use = new us {id=users.id,email=users.email,firstname=users.firstname,lastname=users.lastname };
+            if (users != null && user.password == users.password) use = new us { id = users.id, email = users.email, firstname = users.firstname, lastname = users.lastname };
             return use;
         }
         public static bool changeconnectionid(int id, string newid)
@@ -227,6 +260,19 @@ namespace DAl
                     user.Lastonline = DateTime.Now;
                 }
 
+                Database.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public static bool seen(int id)
+        {
+            try
+            {
+                Database.messag.FirstOrDefault(x => x.id == id).seen = true;
                 Database.SaveChanges();
                 return true;
             }

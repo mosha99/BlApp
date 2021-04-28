@@ -9,13 +9,12 @@
 
 <div class="scrollbar style-1">
 
-
     @foreach (var item in messags)
     {
         if (item.tname == "me")
         {
             <div class="message">
-                <div class="msb"><span class="ms" style="word-break: break-word;">@item.message</span><span class="date">@item.date.Hour:@item.date.Minute</span></div>
+                <div class="msb"><span class="ms" style="word-break: break-word;" >@item.message</span><span class="date">@item.date.Hour:@item.date.Minute</span></div>
             </div>
         }
         else
@@ -24,6 +23,7 @@
                 <div class="msbT"><span class="mst" style="word-break: break-word;">@item.message</span><span class="date">@item.date.Hour:@item.date.Minute</span></div>
             </div>
         }
+        
     }
 
 
@@ -37,11 +37,31 @@
     protected override Task OnInitializedAsync()
     {
         messags = new List<messageL>();
+
         return base.OnInitializedAsync();
+
     }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        RS();
+        RSC();
+        return base.OnAfterRenderAsync(firstRender);
+
+    }
+    protected override bool ShouldRender()
+    {
+
+        return base.ShouldRender();
+    }
+
+    public async void RSC()
+    {
+        await JS.InvokeAsync<string>("Rscroll", $"#{1020}");
+    }
+
     public async void RS()
     {
-        await JS.InvokeAsync<string>("Rsize");
+        await JS.InvokeAsync<string>("Rsize", "a");
     }
 
 }

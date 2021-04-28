@@ -1,4 +1,5 @@
-﻿using DAl;
+﻿using BlApp.Shared;
+using DAl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,11 +21,15 @@ namespace BlApp.Server.services
 
         public bool cheeck(int id);
         public string login(DAl.userin user);
+
+        public Esignin Signin(Isignin model);
+
         public int cheeckToken(string token);
         public int change(string token, string newid);
         public bool ofline(string connectionid);
         public bool online(int id);
         public sendM addmessage(int userid, string senderId, string message);
         public string getname(string senderId);
+        public bool messagSeen(int id);
     }
 }
