@@ -85,7 +85,7 @@
             Console.WriteLine(token.token);
 
 
-            if (token.token != null)
+            if (token!= null && token?.token != null)
             {
                 Console.WriteLine(token.token);
                 await JS.InvokeAsync<string>("setCookie", "token", token.token);
@@ -104,5 +104,6 @@
         {
             error = "ورود ناموفق";
         }
-
+        inpro = false;
+        StateHasChanged();
     } }

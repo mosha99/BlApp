@@ -22,7 +22,7 @@ namespace Database
         public DbSet<messags> messag { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Server=.; initial catalog=Messager;integrated security=true;");
+            optionsBuilder.UseSqlServer(@"Data Source=.;Initial Catalog=Messager;User ID=messager;Password=ms8492");
             //optionsBuilder.UseSqlServer(@"Data Source =.; Initial Catalog = Messager; Integrated Security = True; MultipleActiveResultSets = False; ");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)

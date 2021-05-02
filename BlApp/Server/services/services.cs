@@ -72,6 +72,10 @@ namespace BlApp.Server.services
 
             return user;
         }
+        public void removeM(int idm)
+        {
+            DAl.manager.DeletMessage(idm);
+        }
         public int cheeckToken(string token)
         {
             int id = jwtUtility.auth(token, mainsetings);

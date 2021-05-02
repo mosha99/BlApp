@@ -23,23 +23,40 @@ namespace BlApp.Server.Hubs
 
         {
 
-            if (to != null && to != 0 && message != null)
+            if (to != null && to > 0 && message != null)
             {
                 try
                 {
                     var sendto = Userservis.addmessage(to, Context.ConnectionId, message);
-                    var item = sendto.Message;
+                    if (sendto.Message.sender == null)
+                    {
+                        Userservis.removeM(sendto.Message.id);
+                        if (sendto.Message.target != null)
+                        {
+                            await Clients.Client(Context.ConnectionId).SendAsync("restart", sendto.Message.messag, sendto.Message.target.id);
+                        }
+                    }
+                    else
+                    {
 
-                    //string Ns = Userservis.getname(Context.ConnectionId);
 
-                    var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = item.sender.firstname + " " + item.sender.lastname, tname = "me", id = item.sender.id, Mid = item.id, seen = item.seen });
-                    if (sendto.Cid != null) await Clients.Client(sendto.Cid).SendAsync("ReceiveMessage", x);
-                    x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = "me", tname = item.target.firstname + " " + item.target.lastname, id = item.sender.id, Mid = item.id, seen = true });
-                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", x);
+                        var item = sendto.Message;
+
+                        //string Ns = Userservis.getname(Context.ConnectionId);
+                        if (item.target != null && item.sender != null)
+                        {
+                            var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = item.sender.firstname + " " + item.sender.lastname, tname = "me", id = item.sender.id, Mid = item.id, seen = item.seen });
+                            if (sendto.Cid != null) await Clients.Client(sendto.Cid).SendAsync("ReceiveMessage", x);
+
+                            x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = "me", tname = item.target.firstname + " " + item.target.lastname, id = item.sender.id, Mid = item.id, seen = true });
+                            await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", x);
+                        }
+                    }
+
                 }
-                catch
+                catch (Exception ex)
                 {
-                    await Clients.Client(Context.ConnectionId).SendAsync("success", "is fild");
+                    await Clients.Client(Context.ConnectionId).SendAsync("success", "شکست در ارسال");
                 }
 
             }
@@ -54,6 +71,9 @@ namespace BlApp.Server.Hubs
         {
             Userservis.messagSeen(Mid);
         }
+
+
+
 
         public async Task start(string token)
         {
@@ -74,8 +94,17 @@ namespace BlApp.Server.Hubs
 
                         foreach (var item in list)
                         {
-                            var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = item.sender.firstname + " " + item.sender.lastname, tname = "me", id = item.sender.id, Mid = item.id, seen = item.seen });
-                            await Clients.Client(id).SendAsync("ReceiveMessage", x);
+                            try
+                            {
+                                var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = item.sender.firstname + " " + item.sender.lastname, tname = "me", id = item.sender.id, Mid = item.id, seen = item.seen });
+                                await Clients.Client(id).SendAsync("ReceiveMessage", x);
+                            }
+                            catch
+                            {
+                                await Clients.Client(id).SendAsync("success", $"مشکل{ item.id}");
+                            }
+
+
                         }
                     }
                     if (list2 != null && list2.Count != 0)
@@ -83,26 +112,36 @@ namespace BlApp.Server.Hubs
 
                         foreach (var item in list2)
                         {
-                            if (item.target != null)
+                            try
                             {
-                                var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = "me", tname = item.target.firstname + " " + item.target.lastname, id = item.target.id, Mid = item.id, seen = true });
-                                await Clients.Client(id).SendAsync("ReceiveMessage", x);
+                                if (item.target != null)
+                                {
+                                    var x = JsonConvert.SerializeObject(new messageL { date = item.sendDate, message = item.messag, name = "me", tname = item.target.firstname + " " + item.target.lastname, id = item.target.id, Mid = item.id, seen = true });
+                                    await Clients.Client(id).SendAsync("ReceiveMessage", x);
+                                }
                             }
-
+                            catch
+                            {
+                                await Clients.Client(id).SendAsync("success", $"مشکل{ item.id}");
+                            }
                         }
 
                     }
                     await Clients.Client(id).SendAsync("success", "all send");
                 }
 
-                else await Clients.Client(id).SendAsync("success", "is fild");
+                else await Clients.Client(id).SendAsync("success", "کاربر پیدا نشد");
 
             }
             catch (Exception ex)
             {
-                await Clients.Client(id).SendAsync("success", "is fild");
+                await Clients.Client(id).SendAsync("success", "شکست");
             }
         }
+
+
+
+
         public async Task getall()
         {
             string id = Context.ConnectionId;

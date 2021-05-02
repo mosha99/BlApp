@@ -18,7 +18,7 @@ namespace BlApp.Server.services
         public List<Database.messags> inputM(int id);
 
         public List<Database.messags> inputM(int id, bool seen);
-
+        public void removeM(int idm);
         public bool cheeck(int id);
         public string login(DAl.userin user);
 
