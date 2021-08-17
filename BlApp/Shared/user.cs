@@ -16,6 +16,7 @@ namespace BlApp.Shared
         public string password { get; set; }
 
     }
+    
     public class signin : Isignin
     {
         public string firsname  { get; set; }
